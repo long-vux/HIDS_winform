@@ -22,7 +22,6 @@ The Host-Based Intrusion Detection System (HIDS) is a WinForms application desig
 1. **Clone or download the project**:
    ```bash
    git clone https://github.com/long-vux/HIDS_winform.git
-  bash ```
   
 2. **Open the project in Visual Studio**:
    - Open the `.sln` file in Visual Studio.
