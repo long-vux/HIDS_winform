@@ -41,6 +41,7 @@
             this.lblStatus = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.btnBrowse = new System.Windows.Forms.Button();
+            this.btnExit = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // txtDirectory
@@ -61,22 +62,24 @@
             // 
             // btnStart
             // 
+            this.btnStart.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.btnStart.Location = new System.Drawing.Point(624, 102);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(125, 49);
             this.btnStart.TabIndex = 2;
             this.btnStart.Text = "Bắt đầu";
-            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.UseVisualStyleBackColor = false;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
             // btnStop
             // 
+            this.btnStop.BackColor = System.Drawing.Color.Red;
             this.btnStop.Location = new System.Drawing.Point(624, 169);
             this.btnStop.Name = "btnStop";
             this.btnStop.Size = new System.Drawing.Size(125, 49);
             this.btnStop.TabIndex = 4;
             this.btnStop.Text = "Dừng lại";
-            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.UseVisualStyleBackColor = false;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
             // listBoxLogs
@@ -144,11 +147,22 @@
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
+            // btnExit
+            // 
+            this.btnExit.Location = new System.Drawing.Point(624, 241);
+            this.btnExit.Name = "btnExit";
+            this.btnExit.Size = new System.Drawing.Size(125, 49);
+            this.btnExit.TabIndex = 12;
+            this.btnExit.Text = "Thoát";
+            this.btnExit.UseVisualStyleBackColor = true;
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(924, 571);
+            this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.lblStatus);
@@ -182,6 +196,7 @@
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.Button btnExit;
     }
 }
 

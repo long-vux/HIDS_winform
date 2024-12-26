@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
-using System.Collections.ObjectModel;
+using System.Net.Mail;
+using System.Net;
 
 namespace HIDS
 {
@@ -70,6 +66,7 @@ namespace HIDS
 
             btnStart.Enabled = false;
             btnStop.Enabled = true;
+            btnBrowse.Enabled = false;
         }
 
         private void btnStop_Click(object sender, EventArgs e)
@@ -155,18 +152,101 @@ namespace HIDS
         }
 
         // làm việc với file
-        private bool IsCriticalFile(string filePath)
+        private bool IsCriticalFile(string fileName)
         {
-            // Danh sách các tệp quan trọng cần giám sát
-            string[] criticalFiles = { "C:\\path\\to\\important_file.txt" };
-            return criticalFiles.Contains(filePath);
+            try
+            {
+                // Đường dẫn tệp important_file.txt
+                string importantFilePath = @"C:\Users\lenovo\Desktop\important_file.txt";
+
+                // Đọc tất cả các dòng từ tệp
+                if (File.Exists(importantFilePath))
+                {
+                    string[] criticalFiles = File.ReadAllLines(importantFilePath);
+
+                    // Kiểm tra fileName có trong danh sách không (không phân biệt hoa thường)
+                    return criticalFiles.Contains(fileName, StringComparer.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Đã xảy ra lỗi khi đọc tệp quan trọng:\n{ex.Message}",
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return false;
+            }
         }
 
+
         // gửi cảnh báo qua email của quản lý
-        private void SendAlert(string message)
+        private void SendEmailNotification(string filePath)
         {
-            // Gửi cảnh báo qua email
-            MessageBox.Show(message, "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            string to = "hoanglongvu233@gmail.com"; // Recipient email
+            string subject = "Important File Deletion Alert";
+
+            // Construct the HTML body
+            string body = $@"
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }}
+                .alert {{
+                    color: #ff0000;
+                    font-weight: bold;
+                }}
+                .metrics {{
+                    margin-top: 20px;
+                    font-size: 14px;
+                }}
+                .footer {{
+                    margin-top: 30px;
+                    font-size: 12px;
+                    color: #777;
+                }}
+            </style>
+        </head>
+        <body>
+            <h2>Important File Deletion Alert</h2>
+            <p class='alert'>The critical file <strong>{filePath}</strong> has been deleted or modified.</p>
+            
+            <div class='metrics'>
+                <h3>System Metrics</h3>
+                <p>CPU Usage: {cpuCounter.NextValue()}%</p>
+                <p>Available RAM: {ramCounter.NextValue()} MB</p>
+            </div>
+            
+            <div class='footer'>
+                <p>This is an automated alert from your Host-based Intrusion Detection System (HIDS).</p>
+            </div>
+        </body>
+        </html>";
+
+            // Send the email
+            using (MailMessage mail = new MailMessage())
+            {
+                mail.From = new MailAddress("henrylong.work@gmail.com");
+                mail.To.Add(to);
+                mail.Subject = subject;
+                mail.Body = body;
+                mail.IsBodyHtml = true; // Enable HTML content
+
+                using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
+                {
+                    smtp.Credentials = new NetworkCredential("henrylong.work@gmail.com", "qqmj cexm vbju jbvl");
+                    smtp.EnableSsl = true;
+                    smtp.Send(mail);
+                }
+            }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
@@ -178,10 +258,20 @@ namespace HIDS
             });
             WriteLog(logMessage);
 
+            string fileName = Path.GetFileName(e.FullPath); // Lấy tên tệp
+
             // Kiểm tra hành vi bất thường
-            if (e.ChangeType == WatcherChangeTypes.Deleted && IsCriticalFile(e.FullPath))
+            if ((e.ChangeType == WatcherChangeTypes.Deleted || e.ChangeType == WatcherChangeTypes.Changed || e.ChangeType == WatcherChangeTypes.Renamed) && IsCriticalFile(fileName))
             {
-                SendAlert($"Cảnh báo: Tệp quan trọng đã bị xóa: {e.FullPath}");
+                // show thông báo
+                MessageBox.Show(
+                    "Tệp quan trọng đã bị xóa hoặc chỉnh sửa!",
+                    "Cảnh báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                // Gửi cảnh báo qua email
+                SendEmailNotification(e.FullPath);
             }
         }
 
@@ -218,13 +308,37 @@ namespace HIDS
             {
                 lblCpuUsage.Text = $"CPU Usage: {cpuUsage}%";
                 lblAvailableRam.Text = $"Available RAM: {availableRam} MB";
+
+                // Kiểm tra ngưỡng CPU
+                if (cpuUsage > 80) // Ngưỡng 80%
+                {
+                    SendAlert($"Cảnh báo: Sử dụng CPU cao: {cpuUsage}%");
+                }
+
+                // Kiểm tra ngưỡng RAM
+                if (availableRam < 100) // Ngưỡng 100 MB
+                {
+                    SendAlert($"Cảnh báo: RAM khả dụng thấp: {availableRam} MB");
+                }
             });
         }
-        
+
+        private void SendAlert(string message)
+        {
+            // Gửi cảnh báo qua email hoặc hiển thị thông báo
+            MessageBox.Show(message, "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            // thoát chương trình
+            Application.Exit();
         }
     }
 }
